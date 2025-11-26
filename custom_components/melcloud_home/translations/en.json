@@ -2,15 +2,17 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect to MELCloud Home",
-        "description": "Follow these steps to get your cookie:\n\n1. Log in to https://melcloudhome.com in your browser\n2. Open Chrome DevTools (F12)\n3. Click on the Network tab\n4. Reload the page (F5 or Ctrl+R)\n5. Click on the first request in the list (melcloudhome.com)\n6. In the right panel, scroll down to Request Headers\n7. Find the line starting with 'cookie:'\n8. Right-click on the value (not on 'cookie:')\n9. Select 'Copy value' and paste here",
+        "title": "Login to MELCloud Home",
+        "description": "Enter your MELCloud Home credentials. Your session will be automatically renewed when it expires.",
         "data": {
-          "cookie": "Cookie string from browser"
+          "username": "Email",
+          "password": "Password"
         }
       }
     },
     "error": {
-      "invalid_cookie": "Invalid cookie - please try again",
+      "invalid_auth": "Invalid username or password",
+      "cannot_connect": "Cannot connect to MELCloud Home",
       "unknown": "Unexpected error occurred"
     },
     "abort": {
@@ -20,10 +22,11 @@
   "options": {
     "step": {
       "init": {
-        "title": "Update MELCloud Home Cookie",
-        "description": "Update your MELCloud Home cookie here. Extract a new cookie from melcloudhome.com (Network tab → Request Headers → cookie).",
+        "title": "Update MELCloud Home Credentials",
+        "description": "Update your MELCloud Home login credentials here.",
         "data": {
-          "cookie": "Cookie string from browser"
+          "username": "Email",
+          "password": "Password"
         }
       }
     }

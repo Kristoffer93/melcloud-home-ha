@@ -1,17 +1,17 @@
-"""MELCloud Home integration för Home Assistant (Cookie-baserad)."""
+"""MELCloud Home integration för Home Assistant."""
 from __future__ import annotations
 
 import logging
 from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, Platform
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import MelCloudHomeCookieAPI
-from .const import CONF_COOKIE, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,22 +24,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api = MelCloudHomeCookieAPI()
     await api.async_setup()
     
-    # Sätt cookie
-    cookie = entry.data.get(CONF_COOKIE)
-    if not cookie:
-        _LOGGER.error("Ingen cookie hittades i konfigurationen")
-        raise ConfigEntryNotReady("Ingen cookie konfigurerad")
+    # Hämta användarnamn/lösenord
+    username = entry.data.get(CONF_USERNAME)
+    password = entry.data.get(CONF_PASSWORD)
     
-    api.set_cookie(cookie)
+    if not username or not password:
+        _LOGGER.error("Användarnamn eller lösenord saknas i konfigurationen")
+        raise ConfigEntryNotReady("Ingen inloggningsinformation konfigurerad")
+    
+    # Automatisk inloggning
+    _LOGGER.debug("Använder automatisk inloggning med användarnamn/lösenord")
+    api.set_credentials(username, password)
+    
+    if not await api.async_login():
+        _LOGGER.error("Kunde inte logga in med användarnamn och lösenord")
+        raise ConfigEntryAuthFailed("Inloggning misslyckades")
     
     # Testa anslutningen
     user_context = await api.get_user_context()
     if not user_context:
-        _LOGGER.error("Kunde inte verifiera cookie - ogiltig eller utgången")
-        raise ConfigEntryAuthFailed("Cookie ogiltig eller utgången")
+        _LOGGER.error("Kunde inte verifiera autentisering")
+        raise ConfigEntryAuthFailed("Autentisering misslyckades")
     
     # Skapa coordinator
-    coordinator = MELCloudHomeCoordinator(hass, api)
+    coordinator = MELCloudHomeCoordinator(hass, api, entry)
     await coordinator.async_config_entry_first_refresh()
     
     # Spara i hass.data
@@ -114,7 +122,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class MELCloudHomeCoordinator(DataUpdateCoordinator):
     """Coordinator för att hantera datauppdateringar."""
 
-    def __init__(self, hass: HomeAssistant, api: MelCloudHomeCookieAPI) -> None:
+    def __init__(self, hass: HomeAssistant, api: MelCloudHomeCookieAPI, entry: ConfigEntry) -> None:
         """Initiera coordinatorn."""
         super().__init__(
             hass,
@@ -123,14 +131,25 @@ class MELCloudHomeCoordinator(DataUpdateCoordinator):
             update_interval=SCAN_INTERVAL,
         )
         self.api = api
+        self.entry = entry
         self._failed_updates = 0
         self._cookie_invalid_notified = False
 
     async def _async_update_data(self) -> dict:
         """Hämta data från API."""
         try:
-            # Hämta användarkontext som innehåller alla enheter
+            # Om vi har användarnamn/lösenord, försök logga in igen vid behov
+            username = self.entry.data.get(CONF_USERNAME)
+            password = self.entry.data.get(CONF_PASSWORD)
+            
+            # Hämta användarkontext
             user_context = await self.api.get_user_context()
+            
+            # Om vi fick 401 och har credentials, försök logga in igen
+            if not user_context and username and password:
+                _LOGGER.info("Session utgången, försöker logga in igen...")
+                if await self.api.async_login():
+                    user_context = await self.api.get_user_context()
             
             if not user_context:
                 self._failed_updates += 1
@@ -139,38 +158,39 @@ class MELCloudHomeCoordinator(DataUpdateCoordinator):
                 if self._failed_updates >= 3 and not self._cookie_invalid_notified:
                     self._cookie_invalid_notified = True
                     
+                    message = (
+                        "🔐 **MELCloud Home - Session utgången**\n\n"
+                        "Din session har upphört. Integrationen kommer försöka logga in "
+                        "automatiskt vid nästa uppdatering. Om problemet kvarstår, "
+                        "uppdatera dina inloggningsuppgifter under Konfigurera."
+                    )
+                    
                     # Skapa persistent notifikation
                     await self.hass.services.async_call(
                         "persistent_notification",
                         "create",
                         {
-                            "notification_id": f"{DOMAIN}_cookie_expired",
-                            "title": "MELCloud Home - Cookie utgången",
-                            "message": (
-                                "🍪 **MELCloud Home Cookie har gått ut**\n\n"
-                                "Din cookie-session har upphört att fungera. "
-                                "Vänligen extrahera en ny cookie från melcloudhome.com och "
-                                "uppdatera integrationen.\n\n"
-                                "**Så här gör du:**\n"
-                                "1. Gå till Inställningar → Enheter & Tjänster\n"
-                                "2. Klicka på MELCloud Home\n"
-                                "3. Välj Konfigurera\n"
-                                "4. Klistra in ny cookie\n\n"
-                                "Eller använd Browser Extension för snabb extraktion."
-                            ),
+                            "notification_id": f"{DOMAIN}_session_expired",
+                            "title": "MELCloud Home - Session utgången",
+                            "message": message,
                         },
                     )
                     _LOGGER.warning(
-                        "Cookie har gått ut efter %d misslyckade försök. "
-                        "Notifikation skickad till användaren.",
+                        "Session har gått ut efter %d misslyckade försök",
                         self._failed_updates
                     )
                 
-                raise UpdateFailed("Kunde inte hämta användarkontext - cookie ogiltig?")
+                raise UpdateFailed("Kunde inte hämta användarkontext - session ogiltig?")
             
             # Reset räknare vid lyckad uppdatering
             if self._failed_updates > 0:
                 _LOGGER.info("Anslutning återställd efter %d misslyckade försök", self._failed_updates)
+                # Rensa notifikation
+                await self.hass.services.async_call(
+                    "persistent_notification",
+                    "dismiss",
+                    {"notification_id": f"{DOMAIN}_session_expired"},
+                )
             self._failed_updates = 0
             self._cookie_invalid_notified = False
             

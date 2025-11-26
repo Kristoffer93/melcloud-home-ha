@@ -45,15 +45,15 @@ async def async_setup_entry(
                 entities.append(
                     MELCloudHomeTemperatureSensor(
                         coordinator, device_id, device_name, "room_temperature",
-                        "Rumstemperatur", "RoomTemperatureZone1"
+                        "RoomTemperatureZone1"
                     )
                 )
             
             if "TankWaterTemperature" in settings_dict:
                 entities.append(
                     MELCloudHomeTemperatureSensor(
-                        coordinator, device_id, device_name, "tank_temperature",
-                        "Varmvattentemperatur", "TankWaterTemperature"
+                        coordinator, device_id, device_name, "tank_water_temperature",
+                        "TankWaterTemperature"
                     )
                 )
     
@@ -74,7 +74,6 @@ class MELCloudHomeTemperatureSensor(CoordinatorEntity, SensorEntity):
         unit_id: str,
         unit_name: str,
         sensor_type: str,
-        sensor_name: str,
         data_key: str,
     ) -> None:
         """Initiera sensorn."""
@@ -83,7 +82,7 @@ class MELCloudHomeTemperatureSensor(CoordinatorEntity, SensorEntity):
         self._sensor_type = sensor_type
         self._data_key = data_key
         self._attr_unique_id = f"{unit_id}_{sensor_type}"
-        self._attr_name = sensor_name
+        self._attr_translation_key = sensor_type
 
     @property
     def device_info(self):

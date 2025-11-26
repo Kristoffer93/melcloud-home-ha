@@ -2,15 +2,17 @@
   "config": {
     "step": {
       "user": {
-        "title": "Anslut till MELCloud Home",
-        "description": "Följ dessa steg för att hämta din cookie:\n\n1. Logga in på https://melcloudhome.com i din webbläsare\n2. Öppna Chrome DevTools (F12)\n3. Klicka på Network-fliken\n4. Ladda om sidan (F5 eller Ctrl+R)\n5. Klicka på första requesten i listan (melcloudhome.com)\n6. I höger panel, scrolla ner till Request Headers\n7. Hitta raden som börjar med 'cookie:'\n8. Högerklicka på värdet (inte på 'cookie:')\n9. Välj 'Copy value' och klistra in här",
+        "title": "Logga in på MELCloud Home",
+        "description": "Ange dina MELCloud Home-inloggningsuppgifter. Din session förnyas automatiskt när den upphör.",
         "data": {
-          "cookie": "Cookie-sträng från webbläsare"
+          "username": "E-post",
+          "password": "Lösenord"
         }
       }
     },
     "error": {
-      "invalid_cookie": "Ogiltig cookie - försök igen",
+      "invalid_auth": "Ogiltigt användarnamn eller lösenord",
+      "cannot_connect": "Kan inte ansluta till MELCloud Home",
       "unknown": "Oväntat fel uppstod"
     },
     "abort": {
@@ -20,10 +22,11 @@
   "options": {
     "step": {
       "init": {
-        "title": "Uppdatera MELCloud Home Cookie",
-        "description": "Uppdatera din MELCloud Home cookie här. Extrahera en ny cookie från melcloudhome.com (Network tab → Request Headers → cookie).",
+        "title": "Uppdatera MELCloud Home-inloggning",
+        "description": "Uppdatera dina MELCloud Home-inloggningsuppgifter här.",
         "data": {
-          "cookie": "Cookie-sträng från webbläsare"
+          "username": "E-post",
+          "password": "Lösenord"
         }
       }
     }

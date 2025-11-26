@@ -1,4 +1,4 @@
-"""Config flow för MELCloud Home (Cookie-baserad)."""
+"""Config flow för MELCloud Home."""
 from __future__ import annotations
 
 import logging
@@ -7,18 +7,20 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .api import MelCloudHomeCookieAPI
-from .const import CONF_COOKIE, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({
-    vol.Required(CONF_COOKIE): str,
+# Schema för användarnamn/lösenord
+DATA_SCHEMA_LOGIN = vol.Schema({
+    vol.Required(CONF_USERNAME): str,
+    vol.Required(CONF_PASSWORD): str,
 })
 
 
@@ -38,58 +40,51 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Hantera användarsteget."""
+        """Hantera inloggning med användarnamn och lösenord."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            cookie = user_input[CONF_COOKIE]
+            username = user_input[CONF_USERNAME]
+            password = user_input[CONF_PASSWORD]
 
             try:
-                # Testa cookien
+                # Testa inloggningen
                 api = MelCloudHomeCookieAPI()
                 await api.async_setup()
-                api.set_cookie(cookie)
+                api.set_credentials(username, password)
                 
-                user_context = await api.get_user_context()
-                await api.async_close()
-                
-                if not user_context:
-                    errors["base"] = "invalid_cookie"
+                # Försök logga in
+                if not await api.async_login():
+                    errors["base"] = "invalid_auth"
                 else:
-                    # Hämta användarnamn för titel (data ligger direkt på top-level)
-                    firstname = user_context.get("firstname", "")
-                    lastname = user_context.get("lastname", "")
-                    name = f"{firstname} {lastname}".strip()
-                    if not name:
-                        name = user_context.get("email", "MELCloud Home")
+                    # Hämta användarkontext
+                    user_context = await api.get_user_context()
+                    await api.async_close()
                     
-                    # Skapa entry
-                    return self.async_create_entry(
-                        title=f"MELCloud Home ({name})",
-                        data=user_input,
-                    )
+                    if not user_context:
+                        errors["base"] = "cannot_connect"
+                    else:
+                        # Hämta användarnamn för titel
+                        firstname = user_context.get("firstname", "")
+                        lastname = user_context.get("lastname", "")
+                        name = f"{firstname} {lastname}".strip()
+                        if not name:
+                            name = user_context.get("email", "MELCloud Home")
+                        
+                        # Skapa entry
+                        return self.async_create_entry(
+                            title=f"MELCloud Home ({name})",
+                            data=user_input,
+                        )
                 
             except Exception as err:  # pylint: disable=broad-except
-                _LOGGER.exception("Oväntat fel vid verifiering av cookie")
+                _LOGGER.exception("Oväntat fel vid inloggning")
                 errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="user",
-            data_schema=DATA_SCHEMA,
+            data_schema=DATA_SCHEMA_LOGIN,
             errors=errors,
-            description_placeholders={
-                "instructions": (
-                    "1. Logga in på https://melcloudhome.com i din webbläsare\n"
-                    "2. Öppna Chrome DevTools (F12)\n"
-                    "3. Klicka på Network-fliken\n"
-                    "4. Ladda om sidan (F5 eller Ctrl+R)\n"
-                    "5. Klicka på första requesten i listan (melcloudhome.com)\n"
-                    "6. I höger panel, scrolla ner till Request Headers\n"
-                    "7. Hitta raden som börjar med 'cookie:'\n"
-                    "8. Högerklicka på värdet (inte på 'cookie:')\n"
-                    "9. Välj 'Copy value' och klistra in här"
-                )
-            },
         )
 
 
@@ -103,49 +98,47 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Manage the options - allow updating cookie."""
+        """Manage the options - allow updating credentials."""
         errors = {}
 
         if user_input is not None:
-            # Validate new cookie
+            username = user_input[CONF_USERNAME]
+            password = user_input[CONF_PASSWORD]
+            
+            # Validate new credentials
             api = MelCloudHomeCookieAPI()
             await api.async_setup()
-            api.set_cookie(user_input[CONF_COOKIE])
+            api.set_credentials(username, password)
             
-            user_context = await api.get_user_context()
-            await api.async_close()
-            
-            if user_context:
-                # Update config entry with new cookie
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry,
-                    data={CONF_COOKIE: user_input[CONF_COOKIE]},
-                )
+            if await api.async_login():
+                user_context = await api.get_user_context()
+                await api.async_close()
                 
-                # Clear any cookie expiration notifications
-                await self.hass.services.async_call(
-                    "persistent_notification",
-                    "dismiss",
-                    {"notification_id": f"{DOMAIN}_cookie_expired"},
-                )
-                
-                return self.async_create_entry(title="", data={})
+                if user_context:
+                    # Update config entry with new credentials
+                    self.hass.config_entries.async_update_entry(
+                        self.config_entry,
+                        data={
+                            CONF_USERNAME: username,
+                            CONF_PASSWORD: password,
+                        },
+                    )
+                    
+                    # Clear any session expiration notifications
+                    await self.hass.services.async_call(
+                        "persistent_notification",
+                        "dismiss",
+                        {"notification_id": f"{DOMAIN}_session_expired"},
+                    )
+                    
+                    return self.async_create_entry(title="", data={})
+                else:
+                    errors["base"] = "cannot_connect"
             else:
-                errors["base"] = "invalid_cookie"
+                errors["base"] = "invalid_auth"
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_COOKIE,
-                        default=self.config_entry.data.get(CONF_COOKIE, ""),
-                    ): str,
-                }
-            ),
+            data_schema=DATA_SCHEMA_LOGIN,
             errors=errors,
-            description_placeholders={
-                "info": "Uppdatera din MELCloud Home cookie här. "
-                "Extrahera en ny cookie från melcloudhome.com (Network tab → Request Headers → cookie)."
-            },
         )

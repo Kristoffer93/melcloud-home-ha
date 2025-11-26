@@ -8,13 +8,14 @@
 > 
 > This integration is currently in beta phase and under active development. I work on it in my spare time and am actively seeking a stable solution, particularly for authentication. **I take no responsibility for any issues that may arise from using this integration.** Use at your own risk.
 
-Cookie-based integration for MELCloud Home supporting:
+Integration for MELCloud Home supporting:
 - 🌡️ **Air-to-Water heat pumps** (ATW)
 - ❄️ **Air-to-Air heat pumps** (ATA) - coming soon
 - 🔥 **Temperature control**
 - 💧 **Hot water temperature**
 - 🎛️ **Zone operation modes**
 - 📊 **Real-time device data**
+- 🔐 **Automatic login** with username/password
 
 ## Installation
 
@@ -39,23 +40,16 @@ Cookie-based integration for MELCloud Home supporting:
 
 ## Configuration
 
-### 1. Extract Cookie from MELCloud Home
-
-1. Log in to [melcloudhome.com](https://melcloudhome.com) in Chrome
-2. Open Developer Tools (F12)
-3. Go to **Network** tab
-4. Reload the page (F5)
-5. Click on the first request (melcloudhome.com)
-6. Under **Request Headers**, find `cookie:`
-7. Right-click on the value → **Copy value**
-
-### 2. Add Integration
-
 1. Go to **Settings** → **Devices & Services**
 2. Click **+ ADD INTEGRATION**
 3. Search for **MELCloud Home**
-4. Paste the cookie string
+4. Enter your MELCloud Home email and password
 5. Click **Submit**
+
+**Features:**
+- ✅ Simple setup - just username and password
+- ✅ Automatic session renewal - no manual maintenance
+- ✅ Seamless re-authentication when sessions expire
 
 ## Features
 
@@ -120,15 +114,14 @@ The climate entity includes extra attributes:
 
 ## Troubleshooting
 
-### Cookie Expired
-Cookies from MELCloud Home have limited lifespan (typically 1-2 weeks). The integration will automatically notify you after 3 failed API calls.
+### Session Issues
+The integration automatically re-authenticates in the background when sessions expire (typically every 8 hours). You should never need to manually update credentials unless your password changes.
 
-When notified:
-1. Extract a new cookie using the methods above
-2. Go to **Settings → Devices & Services**
-3. Click on **MELCloud Home**
-4. Select **Configure**
-5. Paste the new cookie
+If you experience persistent connection issues:
+1. Go to **Settings → Devices & Services**
+2. Click on **MELCloud Home**
+3. Select **Configure**
+4. Re-enter your credentials
 
 ### Logging
 Enable debug logging in `configuration.yaml`:
@@ -145,10 +138,8 @@ The integration polls the MELCloud Home API every **15 minutes** by default. Whe
 
 ## Limitations
 
-- Requires manual cookie extraction (no automatic login)
-- Cookies must be refreshed when they expire (typically every 1-2 weeks)
-- Only read/write device settings (no schedule management yet)
 - Air-to-Air (ATA) units not fully supported yet
+- No schedule management yet (only device control)
 
 ## Disclaimer
 
@@ -156,7 +147,6 @@ The integration polls the MELCloud Home API every **15 minutes** by default. Whe
 
 - ⚠️ **No warranty or support guarantees**
 - 🔧 **Under active development - expect bugs**
-- 🔐 **Authentication solution is still being refined**
 - 📝 **Use at your own risk**
 
 I welcome contributions and bug reports, but please understand that responses may be delayed as I work on this when time permits.

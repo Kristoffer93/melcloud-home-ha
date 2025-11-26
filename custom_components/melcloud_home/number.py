@@ -34,6 +34,7 @@ async def async_setup_entry(
 
 class MELCloudTankSetTemperatureNumber(CoordinatorEntity, NumberEntity):
     _attr_has_entity_name = True
+    _attr_translation_key = "tank_target"
 
     def __init__(self, coordinator, api, device: dict[str, Any]) -> None:
         super().__init__(coordinator)
@@ -41,7 +42,6 @@ class MELCloudTankSetTemperatureNumber(CoordinatorEntity, NumberEntity):
         self._device = device
         self._device_id = device["id"]
         self._attr_unique_id = f"{self._device_id}_tank_set_temp"
-        self._attr_name = f"{device.get('givenDisplayName', 'ATW')} Tank Target"
         caps = device.get("capabilities", {})
         self._attr_min_value = caps.get("minSetTankTemperature", 30)
         self._attr_max_value = caps.get("maxSetTankTemperature", 60)

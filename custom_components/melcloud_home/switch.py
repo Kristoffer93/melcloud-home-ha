@@ -34,6 +34,7 @@ async def async_setup_entry(
 
 class MELCloudForcedHotWaterSwitch(CoordinatorEntity, SwitchEntity):
     _attr_has_entity_name = True
+    _attr_translation_key = "forced_hot_water"
 
     def __init__(self, coordinator, api, device: dict[str, Any]) -> None:
         super().__init__(coordinator)
@@ -41,7 +42,6 @@ class MELCloudForcedHotWaterSwitch(CoordinatorEntity, SwitchEntity):
         self._device = device
         self._device_id = device["id"]
         self._attr_unique_id = f"{self._device_id}_forced_hot_water"
-        self._attr_name = f"{device.get('givenDisplayName', 'ATW')} Forced Hot Water"
 
     @property
     def is_on(self) -> bool:

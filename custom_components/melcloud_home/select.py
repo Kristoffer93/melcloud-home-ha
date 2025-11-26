@@ -37,6 +37,7 @@ async def async_setup_entry(
 class MELCloudOperationModeZone1Select(CoordinatorEntity, SelectEntity):
     _attr_has_entity_name = True
     _attr_options = MODES
+    _attr_translation_key = "zone1_mode"
 
     def __init__(self, coordinator, api, device: dict[str, Any]) -> None:
         super().__init__(coordinator)
@@ -44,7 +45,6 @@ class MELCloudOperationModeZone1Select(CoordinatorEntity, SelectEntity):
         self._device = device
         self._device_id = device["id"]
         self._attr_unique_id = f"{self._device_id}_zone1_mode"
-        self._attr_name = f"{device.get('givenDisplayName', 'ATW')} Zone 1 Mode"
 
     @property
     def current_option(self) -> str | None:

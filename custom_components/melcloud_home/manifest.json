@@ -7,6 +7,6 @@
   "documentation": "https://github.com/Kristoffer93/melcloud-home-ha",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/Kristoffer93/melcloud-home-ha/issues",
-  "requirements": ["aiohttp>=3.8.0"],
+  "requirements": ["aiohttp>=3.8.0", "beautifulsoup4>=4.12.0"],
   "version": "1.0.0"
 }
