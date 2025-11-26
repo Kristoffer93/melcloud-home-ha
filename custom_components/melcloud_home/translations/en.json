@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Connect to MELCloud Home",
-        "description": "Follow these steps to get your cookie:\n\n{instructions}",
+        "description": "Follow these steps to get your cookie:\n\n1. Log in to https://melcloudhome.com in your browser\n2. Open Chrome DevTools (F12)\n3. Click on the Network tab\n4. Reload the page (F5 or Ctrl+R)\n5. Click on the first request in the list (melcloudhome.com)\n6. In the right panel, scroll down to Request Headers\n7. Find the line starting with 'cookie:'\n8. Right-click on the value (not on 'cookie:')\n9. Select 'Copy value' and paste here",
         "data": {
           "cookie": "Cookie string from browser"
         }
@@ -11,10 +11,116 @@
     },
     "error": {
       "invalid_cookie": "Invalid cookie - please try again",
-      "unknown": "An unexpected error occurred"
+      "unknown": "Unexpected error occurred"
     },
     "abort": {
-      "already_configured": "Account already configured"
+      "already_configured": "Device is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Update MELCloud Home Cookie",
+        "description": "Update your MELCloud Home cookie here. Extract a new cookie from melcloudhome.com (Network tab → Request Headers → cookie).",
+        "data": {
+          "cookie": "Cookie string from browser"
+        }
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "melcloud_home": {
+        "state_attributes": {
+          "tank_water_temperature": {
+            "name": "Tank Water Temperature"
+          },
+          "set_tank_temperature": {
+            "name": "Set Tank Temperature"
+          },
+          "operation_mode_zone1": {
+            "name": "Operation Mode Zone 1"
+          },
+          "forced_hot_water": {
+            "name": "Forced Hot Water"
+          },
+          "building": {
+            "name": "Building"
+          }
+        }
+      }
+    },
+    "sensor": {
+      "room_temperature": {
+        "name": "Room Temperature"
+      },
+      "tank_water_temperature": {
+        "name": "Hot Water Temperature"
+      }
+    },
+    "number": {
+      "tank_target": {
+        "name": "Tank Target"
+      }
+    },
+    "switch": {
+      "forced_hot_water": {
+        "name": "Forced Hot Water"
+      }
+    },
+    "select": {
+      "zone1_mode": {
+        "name": "Zone 1 Mode",
+        "state": {
+          "HeatRoomTemperature": "Room Thermostat",
+          "HeatFlowTemperature": "Flow Temperature",
+          "HeatCurve": "Heat Curve"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_tank_water_temperature": {
+      "name": "Set Tank Water Temperature",
+      "description": "Set the target temperature for the hot water tank",
+      "fields": {
+        "unit_id": {
+          "name": "Unit ID",
+          "description": "The ID of the ATW unit"
+        },
+        "temperature": {
+          "name": "Temperature",
+          "description": "Target temperature (30-60°C)"
+        }
+      }
+    },
+    "set_forced_hot_water": {
+      "name": "Set Forced Hot Water Mode",
+      "description": "Enable or disable forced hot water mode",
+      "fields": {
+        "unit_id": {
+          "name": "Unit ID",
+          "description": "The ID of the ATW unit"
+        },
+        "enabled": {
+          "name": "Enabled",
+          "description": "Enable (true) or disable (false)"
+        }
+      }
+    },
+    "set_operation_mode_zone1": {
+      "name": "Set Operation Mode Zone 1",
+      "description": "Set the heating operation mode for Zone 1",
+      "fields": {
+        "unit_id": {
+          "name": "Unit ID",
+          "description": "The ID of the ATW unit"
+        },
+        "mode": {
+          "name": "Mode",
+          "description": "Room Thermostat, Flow Temperature, or Heat Curve"
+        }
+      }
     }
   }
 }

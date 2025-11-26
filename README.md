@@ -1,94 +1,137 @@
-# MELCloud Home Integration för Home Assistant
+# MELCloud Home Integration for Home Assistant
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 [![GitHub release](https://img.shields.io/github/release/Kristoffer93/melcloud-home-ha.svg)](https://github.com/Kristoffer93/melcloud-home-ha/releases)
 [![License](https://img.shields.io/github/license/Kristoffer93/melcloud-home-ha.svg)](LICENSE)
 
-Cookie-baserad integration för MELCloud Home som stödjer:
-- 🌡️ **Air-to-Water värmepumpar** (ATW)
-- ❄️ **Air-to-Air luftvärmepumpar** (ATA) - kommande
-- 🔥 **Temperaturkontroll**
-- 💧 **Varmvattentemperatur**
-- 📊 **Realtidsdata från enheter**
+> **⚠️ BETA VERSION - USE AT YOUR OWN RISK**
+> 
+> This integration is currently in beta phase and under active development. I work on it in my spare time and am actively seeking a stable solution, particularly for authentication. **I take no responsibility for any issues that may arise from using this integration.** Use at your own risk.
+
+Cookie-based integration for MELCloud Home supporting:
+- 🌡️ **Air-to-Water heat pumps** (ATW)
+- ❄️ **Air-to-Air heat pumps** (ATA) - coming soon
+- 🔥 **Temperature control**
+- 💧 **Hot water temperature**
+- 🎛️ **Zone operation modes**
+- 📊 **Real-time device data**
 
 ## Installation
 
-### HACS (Rekommenderat)
+### HACS (Recommended)
 
-1. Öppna HACS i Home Assistant
-2. Gå till **Integrations**
-3. Klicka på menyn (⋮) uppe till höger
-4. Välj **Custom repositories**
-5. Lägg till: `https://github.com/Kristoffer93/melcloud-home-ha`
-6. Kategori: **Integration**
-7. Klicka **Add**
-8. Sök efter "MELCloud Home"
-9. Klicka **Download**
-10. Starta om Home Assistant
+1. Open HACS in Home Assistant
+2. Go to **Integrations**
+3. Click the menu (⋮) in the top right
+4. Select **Custom repositories**
+5. Add: `https://github.com/Kristoffer93/melcloud-home-ha`
+6. Category: **Integration**
+7. Click **Add**
+8. Search for "MELCloud Home"
+9. Click **Download**
+10. Restart Home Assistant
 
-### Manuell installation
+### Manual Installation
 
-1. Ladda ner senaste versionen från [Releases](https://github.com/Kristoffer93/melcloud-home-ha/releases)
-2. Packa upp och kopiera `custom_components/melcloud_home` till din `config/custom_components/` mapp
-3. Starta om Home Assistant
+1. Download the latest version from [Releases](https://github.com/Kristoffer93/melcloud-home-ha/releases)
+2. Extract and copy `custom_components/melcloud_home` to your `config/custom_components/` folder
+3. Restart Home Assistant
 
-## Konfiguration
+## Configuration
 
-### 1. Extrahera Cookie från MELCloud Home
+### 1. Extract Cookie from MELCloud Home
 
-#### Alternativ A: Använd Cookie Helper (Enklare)
-1. Öppna `custom_components/melcloud_home/cookie_helper.html` i din webbläsare
-2. Följ stegen på sidan för att extrahera cookien
+1. Log in to [melcloudhome.com](https://melcloudhome.com) in Chrome
+2. Open Developer Tools (F12)
+3. Go to **Network** tab
+4. Reload the page (F5)
+5. Click on the first request (melcloudhome.com)
+6. Under **Request Headers**, find `cookie:`
+7. Right-click on the value → **Copy value**
 
-#### Alternativ B: Manuell extraktion
-1. Logga in på [melcloudhome.com](https://melcloudhome.com) i Chrome
-2. Öppna Developer Tools (F12)
-3. Gå till **Network** tab
-4. Ladda om sidan (F5)
-5. Klicka på första requesten
-6. Under **Request Headers**, hitta `cookie:`
-7. Högerklicka på värdet → **Copy value**
+### 2. Add Integration
 
-### 2. Lägg till Integration
+1. Go to **Settings** → **Devices & Services**
+2. Click **+ ADD INTEGRATION**
+3. Search for **MELCloud Home**
+4. Paste the cookie string
+5. Click **Submit**
 
-1. Gå till **Inställningar** → **Enheter & Tjänster**
-2. Klicka **+ LÄGG TILL INTEGRATION**
-3. Sök efter **MELCloud Home**
-4. Klistra in cookie-strängen
-5. Klicka **Skicka**
-
-## Funktioner
+## Features
 
 ### Climate Platform
-- `climate.<enhetsnamn>` - Kontrollera din värmepump
-  - Sätt måltemperatur (20-50°C)
-  - Växla mellan uppvärmning/kylning/av
-  - Se aktuell rumstemperatur
+- `climate.<device_name>` - Control your heat pump
+  - Set target temperature (20-50°C)
+  - Toggle between heat/off
+  - View current room temperature
 
 ### Sensor Platform
-- `sensor.<enhetsnamn>_rumstemperatur` - Aktuell rumstemperatur
-- `sensor.<enhetsnamn>_varmvattentemperatur` - Varmvattentemperatur
+- `sensor.<device_name>_room_temperature` - Current room temperature
+- `sensor.<device_name>_hot_water_temperature` - Hot water tank temperature
 
-### Extra Attribut
-Climate-entiteten har extra attribut:
-- `tank_water_temperature` - Varmvattentemperatur
-- `set_tank_temperature` - Måltemperatur varmvatten
-- `operation_mode_zone1` - Driftläge zon 1
-- `forced_hot_water` - Tvingad varmvattenproduktion
-- `building` - Byggnadsnamn
+### Number Platform
+- `number.<device_name>_tank_target` - Set hot water tank target temperature (30-60°C)
 
-## Felsökning
+### Switch Platform
+- `switch.<device_name>_forced_hot_water` - Enable/disable forced hot water mode
 
-### Cookie har gått ut
-Cookies från MELCloud Home har begränsad livstid. Om integrationen slutar fungera:
-1. Extrahera ny cookie enligt instruktionerna ovan
-2. Gå till **Inställningar → Enheter & Tjänster**
-3. Klicka på **MELCloud Home**
-4. Välj **Konfigurera**
-5. Klistra in ny cookie
+### Select Platform
+- `select.<device_name>_zone_1_mode` - Choose Zone 1 operation mode:
+  - Room Thermostat (HeatRoomTemperature)
+  - Flow Temperature (HeatFlowTemperature)
+  - Heat Curve (HeatCurve)
 
-### Loggning
-Aktivera debug-loggning i `configuration.yaml`:
+### Services
+
+#### `melcloud_home.set_tank_water_temperature`
+Set the target temperature for the hot water tank.
+```yaml
+service: melcloud_home.set_tank_water_temperature
+data:
+  unit_id: "56360d5d-6ab7-4212-9188-9057da1ade8a"
+  temperature: 55
+```
+
+#### `melcloud_home.set_forced_hot_water`
+Enable or disable forced hot water mode.
+```yaml
+service: melcloud_home.set_forced_hot_water
+data:
+  unit_id: "56360d5d-6ab7-4212-9188-9057da1ade8a"
+  enabled: true
+```
+
+#### `melcloud_home.set_operation_mode_zone1`
+Set the heating operation mode for Zone 1.
+```yaml
+service: melcloud_home.set_operation_mode_zone1
+data:
+  unit_id: "56360d5d-6ab7-4212-9188-9057da1ade8a"
+  mode: "HeatRoomTemperature"  # or "HeatFlowTemperature", "HeatCurve"
+```
+
+### Extra Attributes
+The climate entity includes extra attributes:
+- `tank_water_temperature` - Hot water tank temperature
+- `set_tank_temperature` - Target hot water temperature
+- `operation_mode_zone1` - Zone 1 operation mode
+- `forced_hot_water` - Forced hot water mode status
+- `building` - Building name
+
+## Troubleshooting
+
+### Cookie Expired
+Cookies from MELCloud Home have limited lifespan (typically 1-2 weeks). The integration will automatically notify you after 3 failed API calls.
+
+When notified:
+1. Extract a new cookie using the methods above
+2. Go to **Settings → Devices & Services**
+3. Click on **MELCloud Home**
+4. Select **Configure**
+5. Paste the new cookie
+
+### Logging
+Enable debug logging in `configuration.yaml`:
 ```yaml
 logger:
   default: info
@@ -96,35 +139,40 @@ logger:
     custom_components.melcloud_home: debug
 ```
 
-## Begränsningar
+## Update Interval
 
-- Kräver manuell cookie-extraktion (ingen automatisk inloggning)
-- Cookies måste uppdateras när de går ut
-- Endast läs/skriv av enhetsinställningar (inga schemaläggningsfunktioner än)
+The integration polls the MELCloud Home API every **15 minutes** by default. When you make changes (temperature, mode, etc.), the integration immediately requests a fresh update to reflect your changes in the UI.
 
-## Support
+## Limitations
 
-- 🐛 [Rapportera buggar](https://github.com/Kristoffer93/melcloud-home-ha/issues)
-- 💡 [Föreslå funktioner](https://github.com/Kristoffer93/melcloud-home-ha/issues)
-- 📖 [Dokumentation](https://github.com/Kristoffer93/melcloud-home-ha/wiki)
+- Requires manual cookie extraction (no automatic login)
+- Cookies must be refreshed when they expire (typically every 1-2 weeks)
+- Only read/write device settings (no schedule management yet)
+- Air-to-Air (ATA) units not fully supported yet
 
-## Licens
+## Disclaimer
 
-MIT License - se [LICENSE](LICENSE) för detaljer
+**This is a personal project developed in my spare time.** 
 
-## Tack till
+- ⚠️ **No warranty or support guarantees**
+- 🔧 **Under active development - expect bugs**
+- 🔐 **Authentication solution is still being refined**
+- 📝 **Use at your own risk**
 
-- Mitsubishi Electric för MELCloud Home-plattformen
-- Home Assistant-gemenskapen
-
-1. **Kräver Chromium** - Fungerar inte på alla plattformar
-2. **Långsam inloggning** - Browser automation tar tid
-3. **Ingen cookie-baserad auth** - Varje omstart kräver ny browser-inloggning
-
-## Alternativ
-
-För en mer robust lösning kan cookie-baserad autentisering användas istället (se `melcloud_cookie_test.py` i repot).
+I welcome contributions and bug reports, but please understand that responses may be delayed as I work on this when time permits.
 
 ## Support
 
-Rapportera problem på [GitHub Issues](https://github.com/Kristoffer93/melcloud-home-ha/issues)
+- 🐛 [Report bugs](https://github.com/Kristoffer93/melcloud-home-ha/issues)
+- 💡 [Suggest features](https://github.com/Kristoffer93/melcloud-home-ha/issues)
+- 📖 [Documentation](https://github.com/Kristoffer93/melcloud-home-ha/wiki)
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details
+
+## Credits
+
+- Mitsubishi Electric for the MELCloud Home platform
+- Home Assistant community
+

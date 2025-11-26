@@ -80,10 +80,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "instructions": (
                     "1. Logga in på https://melcloudhome.com i din webbläsare\n"
-                    "2. Öppna Developer Tools (F12)\n"
-                    "3. Gå till Console-fliken\n"
-                    "4. Kör: document.cookie\n"
-                    "5. Kopiera hela cookie-strängen och klistra in här"
+                    "2. Öppna Chrome DevTools (F12)\n"
+                    "3. Klicka på Network-fliken\n"
+                    "4. Ladda om sidan (F5 eller Ctrl+R)\n"
+                    "5. Klicka på första requesten i listan (melcloudhome.com)\n"
+                    "6. I höger panel, scrolla ner till Request Headers\n"
+                    "7. Hitta raden som börjar med 'cookie:'\n"
+                    "8. Högerklicka på värdet (inte på 'cookie:')\n"
+                    "9. Välj 'Copy value' och klistra in här"
                 )
             },
         )
