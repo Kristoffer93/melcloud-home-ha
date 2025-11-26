@@ -56,11 +56,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if not user_context:
                     errors["base"] = "invalid_cookie"
                 else:
-                    # Hämta användarnamn för titel
-                    user = user_context.get("user", {})
-                    name = f"{user.get('firstName', '')} {user.get('surname', '')}".strip()
+                    # Hämta användarnamn för titel (data ligger direkt på top-level)
+                    firstname = user_context.get("firstname", "")
+                    lastname = user_context.get("lastname", "")
+                    name = f"{firstname} {lastname}".strip()
                     if not name:
-                        name = user.get("email", "MELCloud Home")
+                        name = user_context.get("email", "MELCloud Home")
                     
                     # Skapa entry
                     return self.async_create_entry(

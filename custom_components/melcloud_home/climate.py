@@ -160,10 +160,9 @@ class MELCloudHomeClimate(CoordinatorEntity, ClimateEntity):
             state["power"] = False
         else:
             state["power"] = True
-            if hvac_mode == HVACMode.HEAT:
-                state["operationModeZone1"] = "HeatRoomTemperature"
-            elif hvac_mode == HVACMode.COOL:
-                state["operationModeZone1"] = "CoolRoomTemperature"
+            # Air-to-Water stöder endast värmelägen: HeatRoomTemperature, HeatFlowTemperature, HeatCurve
+            # Standard vid påslag: HeatRoomTemperature
+            state["operationModeZone1"] = "HeatRoomTemperature"
         
         await self._api.set_atw_state(self._device_id, state)
         

@@ -8,7 +8,7 @@ import aiohttp
 
 _LOGGER = logging.getLogger(__name__)
 
-BASE_URL = "https://melcloudhome.com/api"
+BASE_URL = "https://melcloudhome.com"
 
 
 class MelCloudHomeCookieAPI:

@@ -15,8 +15,8 @@ from .const import CONF_COOKIE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
-SCAN_INTERVAL = timedelta(seconds=60)
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.NUMBER, Platform.SWITCH, Platform.SELECT]
+SCAN_INTERVAL = timedelta(minutes=15)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -51,6 +51,50 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     
     # Ladda plattformar
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    async def _call_set_state(unit_id: str, state: dict) -> None:
+        await coordinator.api.set_atw_state(unit_id, state)
+        await coordinator.async_request_refresh()
+
+    async def handle_set_tank_temperature(call):
+        unit_id = call.data.get("unit_id")
+        temperature = call.data.get("temperature")
+        if unit_id is None or temperature is None:
+            _LOGGER.error("set_tank_water_temperature requires unit_id and temperature")
+            return
+        await _call_set_state(unit_id, {"setTankWaterTemperature": int(temperature)})
+
+    async def handle_set_forced_hot_water(call):
+        unit_id = call.data.get("unit_id")
+        enabled = call.data.get("enabled")
+        if unit_id is None or enabled is None:
+            _LOGGER.error("set_forced_hot_water requires unit_id and enabled")
+            return
+        await _call_set_state(unit_id, {"forcedHotWaterMode": bool(enabled)})
+
+    async def handle_set_operation_mode_zone1(call):
+        unit_id = call.data.get("unit_id")
+        mode = call.data.get("mode")
+        if unit_id is None or mode is None:
+            _LOGGER.error("set_operation_mode_zone1 requires unit_id and mode")
+            return
+        await _call_set_state(unit_id, {"operationModeZone1": str(mode)})
+
+    hass.services.async_register(
+        DOMAIN,
+        "set_tank_water_temperature",
+        handle_set_tank_temperature,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "set_forced_hot_water",
+        handle_set_forced_hot_water,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "set_operation_mode_zone1",
+        handle_set_operation_mode_zone1,
+    )
     
     return True
 
@@ -62,6 +106,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         data = hass.data[DOMAIN].pop(entry.entry_id)
         await data["api"].async_close()
+        # Services remain available while any entry is loaded; no per-entry unload needed here.
     
     return unload_ok
 
