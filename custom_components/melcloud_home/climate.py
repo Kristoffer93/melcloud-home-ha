@@ -132,8 +132,6 @@ class MELCloudHomeClimate(CoordinatorEntity, ClimateEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Returnera extra attribut."""
         return {
-            "tank_water_temperature": self._get_setting("TankWaterTemperature"),
-            "set_tank_temperature": self._get_setting("SetTankWaterTemperature"),
             "operation_mode_zone1": self._get_setting("OperationModeZone1"),
             "forced_hot_water": self._get_setting("ForcedHotWaterMode"),
             "building": self._device.get("building_name"),

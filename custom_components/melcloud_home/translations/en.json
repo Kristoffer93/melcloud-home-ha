@@ -63,7 +63,7 @@
     },
     "number": {
       "tank_target": {
-        "name": "Tank Target"
+        "name": "Hot Water Target"
       }
     },
     "switch": {

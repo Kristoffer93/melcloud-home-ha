@@ -4,5 +4,6 @@
   "render_readme": true,
   "zip_release": true,
   "filename": "melcloud_home.zip",
-  "homeassistant": "2024.1.0"
+  "homeassistant": "2024.1.0",
+  "hacs": "1.6.0"
 }

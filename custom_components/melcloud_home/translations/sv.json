@@ -58,12 +58,12 @@
         "name": "Rumstemperatur"
       },
       "tank_water_temperature": {
-        "name": "Varmvattentemperatur"
+        "name": "Varmvatten temperatur"
       }
     },
     "number": {
       "tank_target": {
-        "name": "Tank måltemperatur"
+        "name": "Varmvatten måltemperatur"
       }
     },
     "switch": {
