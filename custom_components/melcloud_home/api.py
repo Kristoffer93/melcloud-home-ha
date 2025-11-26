@@ -185,3 +185,41 @@ class MelCloudHomeCookieAPI:
         except Exception as err:
             _LOGGER.exception("Fel vid uppdatering av ATW-enhet %s: %s", unit_id, err)
             return None
+
+    async def set_ata_state(
+        self, unit_id: str, state: dict[str, Any]
+    ) -> dict[str, Any] | None:
+        """Uppdatera inställningar för en ATA-enhet (Air-to-Air).
+        
+        Args:
+            unit_id: ID för enheten
+            state: Flat dictionary med camelCase-nycklar, ex: {"power": true, "setTemperature": 22}
+        """
+        if not self._session or not self._cookie:
+            return None
+
+        headers = {
+            "x-csrf": "1",
+            "Cookie": self._cookie,
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        }
+
+        try:
+            async with self._session.put(
+                f"{BASE_URL}/api/ataunit/{unit_id}",
+                json=state,
+                headers=headers,
+                timeout=aiohttp.ClientTimeout(total=10),
+            ) as response:
+                if response.status in (200, 204):
+                    return {"success": True}
+                else:
+                    text = await response.text()
+                    _LOGGER.error(
+                        "Kunde inte uppdatera ATA-enhet %s: %s - %s", unit_id, response.status, text
+                    )
+                    return None
+        except Exception as err:
+            _LOGGER.exception("Fel vid uppdatering av ATA-enhet %s: %s", unit_id, err)
+            return None

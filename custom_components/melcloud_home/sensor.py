@@ -32,15 +32,17 @@ async def async_setup_entry(
     entities = []
     devices = coordinator.data.get("devices", [])
     
-    # Skapa sensorer för Air-to-Water enheter
+    # Skapa sensorer för både ATW och ATA enheter
     for device in devices:
-        if device.get("type") == "air_to_water":
-            device_id = device["id"]
-            device_name = device.get("givenDisplayName", "Värmepump")
-            
-            # Kontrollera vilka sensorer som finns tillgängliga
-            settings_dict = {s["name"]: s["value"] for s in device.get("settings", [])}
-            
+        device_id = device["id"]
+        device_name = device.get("givenDisplayName", "Heat Pump")
+        device_type = device.get("type")
+        
+        # Kontrollera vilka sensorer som finns tillgängliga
+        settings_dict = {s["name"]: s["value"] for s in device.get("settings", [])}
+        
+        if device_type == "air_to_water":
+            # ATW sensorer
             if "RoomTemperatureZone1" in settings_dict:
                 entities.append(
                     MELCloudHomeTemperatureSensor(
@@ -54,6 +56,16 @@ async def async_setup_entry(
                     MELCloudHomeTemperatureSensor(
                         coordinator, device_id, device_name, "tank_water_temperature",
                         "TankWaterTemperature"
+                    )
+                )
+        
+        elif device_type == "air_to_air":
+            # ATA sensorer
+            if "RoomTemperature" in settings_dict:
+                entities.append(
+                    MELCloudHomeTemperatureSensor(
+                        coordinator, device_id, device_name, "room_temperature",
+                        "RoomTemperature"
                     )
                 )
     

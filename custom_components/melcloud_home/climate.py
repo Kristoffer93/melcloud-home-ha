@@ -33,15 +33,18 @@ async def async_setup_entry(
     entities = []
     devices = coordinator.data.get("devices", [])
     
-    # Skapa climate-entiteter för Air-to-Water enheter (värmepumpar)
+    # Skapa climate-entiteter för både ATW och ATA enheter
     for device in devices:
-        if device.get("type") == "air_to_water":
-            entities.append(MELCloudHomeClimate(coordinator, api, device))
+        device_type = device.get("type")
+        if device_type == "air_to_water":
+            entities.append(MELCloudHomeATWClimate(coordinator, api, device))
+        elif device_type == "air_to_air":
+            entities.append(MELCloudHomeATAClimate(coordinator, api, device))
     
     async_add_entities(entities)
 
 
-class MELCloudHomeClimate(CoordinatorEntity, ClimateEntity):
+class MELCloudHomeATWClimate(CoordinatorEntity, ClimateEntity):
     """Representation av en MELCloud Home ATW-värmepump."""
 
     _attr_has_entity_name = True
