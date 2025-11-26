@@ -1,0 +1,20 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Anslut till MELCloud Home",
+        "description": "Följ dessa steg för att hämta din cookie:\n\n{instructions}",
+        "data": {
+          "cookie": "Cookie-sträng från webbläsaren"
+        }
+      }
+    },
+    "error": {
+      "invalid_cookie": "Ogiltig cookie - försök igen",
+      "unknown": "Ett oväntat fel uppstod"
+    },
+    "abort": {
+      "already_configured": "Konto redan konfigurerat"
+    }
+  }
+}

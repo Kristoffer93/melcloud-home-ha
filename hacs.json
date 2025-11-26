@@ -1,0 +1,8 @@
+{
+  "name": "MELCloud Home",
+  "content_in_root": false,
+  "render_readme": true,
+  "zip_release": true,
+  "filename": "melcloud_home.zip",
+  "homeassistant": "2024.1.0"
+}

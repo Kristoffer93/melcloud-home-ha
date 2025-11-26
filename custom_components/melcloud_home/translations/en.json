@@ -1,0 +1,20 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to MELCloud Home",
+        "description": "Follow these steps to get your cookie:\n\n{instructions}",
+        "data": {
+          "cookie": "Cookie string from browser"
+        }
+      }
+    },
+    "error": {
+      "invalid_cookie": "Invalid cookie - please try again",
+      "unknown": "An unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "Account already configured"
+    }
+  }
+}
