@@ -169,3 +169,144 @@ class MELCloudHomeATWClimate(CoordinatorEntity, ClimateEntity):
         
         # Uppdatera coordinator
         await self.coordinator.async_request_refresh()
+
+    async def async_turn_on(self) -> None:
+        """Slå på värmepumpen."""
+        await self._api.set_atw_state(self._device_id, {"power": True})
+        await self.coordinator.async_request_refresh()
+
+    async def async_turn_off(self) -> None:
+        """Stäng av värmepumpen."""
+        await self._api.set_atw_state(self._device_id, {"power": False})
+        await self.coordinator.async_request_refresh()
+
+
+class MELCloudHomeATAClimate(CoordinatorEntity, ClimateEntity):
+    """Representation av en MELCloud Home ATA-luftvärmepump."""
+
+    _attr_has_entity_name = True
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.TURN_OFF
+    )
+    _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO]
+
+    def __init__(self, coordinator, api, device: dict[str, Any]) -> None:
+        """Initiera ATA climate-entiteten."""
+        super().__init__(coordinator)
+        self._api = api
+        self._device = device
+        self._device_id = device["id"]
+        self._attr_unique_id = f"{self._device_id}_climate"
+        
+        # Hämta capabilities
+        caps = device.get("capabilities", {})
+        self._attr_min_temp = caps.get("minSetTemperature", 16)
+        self._attr_max_temp = caps.get("maxSetTemperature", 31)
+        self._attr_target_temperature_step = max(0.5, float(caps.get("temperatureIncrement", 0.5) or 0.5))
+
+    @property
+    def device_info(self) -> dict[str, Any]:
+        """Returnera enhetsinformation."""
+        return {
+            "identifiers": {(DOMAIN, self._device_id)},
+            "name": self._device.get("givenDisplayName", "ATA Heat Pump"),
+            "manufacturer": "Mitsubishi Electric",
+            "model": "ATA Heat Pump",
+        }
+
+    def _get_setting(self, key: str) -> Any:
+        """Hämta ett setting-värde från enheten."""
+        for d in self.coordinator.data.get("devices", []):
+            if d["id"] == self._device_id:
+                for s in d.get("settings", []):
+                    if s.get("name") == key:
+                        return s.get("value")
+        return None
+
+    @property
+    def current_temperature(self) -> float | None:
+        """Returnera nuvarande rumstemperatur."""
+        temp = self._get_setting("RoomTemperature")
+        if temp is not None:
+            try:
+                return float(temp)
+            except (ValueError, TypeError):
+                return None
+        return None
+
+    @property
+    def target_temperature(self) -> float | None:
+        """Returnera måltemperatur."""
+        temp = self._get_setting("SetTemperature")
+        if temp is not None:
+            try:
+                return float(temp)
+            except (ValueError, TypeError):
+                return None
+        return None
+
+    @property
+    def hvac_mode(self) -> HVACMode:
+        """Returnera nuvarande HVAC-läge."""
+        power = self._get_setting("Power")
+        if str(power) == "False":
+            return HVACMode.OFF
+        
+        op_mode = self._get_setting("OperationMode")
+        if op_mode == "Heat":
+            return HVACMode.HEAT
+        elif op_mode == "Cool":
+            return HVACMode.COOL
+        elif op_mode == "Auto":
+            return HVACMode.AUTO
+        
+        return HVACMode.HEAT
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Returnera extra attribut."""
+        return {
+            "operation_mode": self._get_setting("OperationMode"),
+            "fan_speed": self._get_setting("FanSpeed"),
+            "vane_horizontal": self._get_setting("VaneHorizontal"),
+            "vane_vertical": self._get_setting("VaneVertical"),
+            "building": self._device.get("building_name"),
+        }
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Sätt ny måltemperatur."""
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            return
+        
+        await self._api.set_ata_state(self._device_id, {"setTemperature": float(temperature)})
+        await self.coordinator.async_request_refresh()
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Sätt nytt HVAC-läge."""
+        if hvac_mode == HVACMode.OFF:
+            await self._api.set_ata_state(self._device_id, {"power": False})
+        else:
+            updates = {"power": True}
+            if hvac_mode == HVACMode.HEAT:
+                updates["operationMode"] = "Heat"
+            elif hvac_mode == HVACMode.COOL:
+                updates["operationMode"] = "Cool"
+            elif hvac_mode == HVACMode.AUTO:
+                updates["operationMode"] = "Auto"
+            
+            await self._api.set_ata_state(self._device_id, updates)
+        
+        await self.coordinator.async_request_refresh()
+
+    async def async_turn_on(self) -> None:
+        """Slå på luftvärmepumpen."""
+        await self._api.set_ata_state(self._device_id, {"power": True})
+        await self.coordinator.async_request_refresh()
+
+    async def async_turn_off(self) -> None:
+        """Stäng av luftvärmepumpen."""
+        await self._api.set_ata_state(self._device_id, {"power": False})
+        await self.coordinator.async_request_refresh()
