@@ -59,6 +59,15 @@ class MELCloudTankSetTemperatureNumber(CoordinatorEntity, NumberEntity):
                             return None
         return None
 
+    @property
+    def device_info(self) -> dict[str, Any]:
+        return {
+            "identifiers": {(DOMAIN, self._device_id)},
+            "name": self._device.get("givenDisplayName", "ATW Heat Pump"),
+            "manufacturer": "Mitsubishi Electric",
+            "model": "ATW Heat Pump",
+        }
+
     async def async_set_native_value(self, value: float) -> None:
         await self._api.set_atw_state(self._device_id, {"setTankWaterTemperature": int(value)})
         await self.coordinator.async_request_refresh()

@@ -61,3 +61,12 @@ class MELCloudOperationModeZone1Select(CoordinatorEntity, SelectEntity):
             return
         await self._api.set_atw_state(self._device_id, {"operationModeZone1": option})
         await self.coordinator.async_request_refresh()
+
+    @property
+    def device_info(self) -> dict[str, Any]:
+        return {
+            "identifiers": {(DOMAIN, self._device_id)},
+            "name": self._device.get("givenDisplayName", "ATW Heat Pump"),
+            "manufacturer": "Mitsubishi Electric",
+            "model": "ATW Heat Pump",
+        }
